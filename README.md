@@ -1,0 +1,1 @@
+API for EMIL Wearable devices. Contains I2C level commands for controlling Actuator and Sensor boards, Arduino code for receiving control messages over serial, and pseudocode as well as Python and/or C++ library for communication with the Arduino board, and for implementing advanced functions.
