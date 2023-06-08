@@ -1,19 +1,22 @@
 #include <Wire.h>
 
+// Board type ('p' for peltier)
+char boardType = 'p';
+
 // I2C address for the board (1-127)
-byte slave_add = 2;
+byte slaveAddress = 2;
 
 // Output pins for controlling peltier elements
-byte p1_pin1 = 1;
-byte p1_pin2 = 2;
-byte p2_pin1 = 3;
-byte p2_pin2 = 4;
+byte p1Pin1 = 1;
+byte p1Pin2 = 2;
+byte p2Pin1 = 3;
+byte p2Pin2 = 4;
 
 // Input pins for thermistors
-byte t1_pin = 5;
-byte t2_pin = 6;
-byte t3_pin = 7;
-byte t4_pin = 8;
+byte t1Pin = 5;
+byte t2Pin = 6;
+byte t3Pin = 7;
+byte t4Pin = 8;
 
 
 // Variables for reading control messages
@@ -50,15 +53,15 @@ float VR, RT, ln, TX;
 void setup() {
   
   // Initialize input and output pins
-  pinMode(p1_pin1, OUTPUT);
-  pinMode(p1_pin2, OUTPUT);
-  pinMode(p2_pin1, OUTPUT);
-  pinMode(p2_pin2, OUTPUT);
+  pinMode(p1Pin1, OUTPUT);
+  pinMode(p1Pin2, OUTPUT);
+  pinMode(p2Pin1, OUTPUT);
+  pinMode(p2Pin2, OUTPUT);
   
-  pinMode(t1_pin, INPUT);
-  pinMode(t2_pin, INPUT);
-  pinMode(t3_pin, INPUT);
-  pinMode(t4_pin, INPUT);
+  pinMode(t1Pin, INPUT);
+  pinMode(t2Pin, INPUT);
+  pinMode(t3Pin, INPUT);
+  pinMode(t4Pin, INPUT);
 
   // Initialize I2C communication
   Wire.begin(slave_add);
@@ -75,20 +78,20 @@ void loop() {
   if (direction1 == 0) {
     // If overheating, shut down pwm
     if (temperatures[0] > maximumTemperatureSide1 || temperatures[1] < minimumTemperatureSide2) {
-      analogWrite(p1_pin1, 0);
-      analogWrite(p1_pin2, 0);
+      analogWrite(p1Pin1, 0);
+      analogWrite(p1Pin2, 0);
     } else {
-      analogWrite(p1_pin1, intensity1);
-      analogWrite(p1_pin2, 0);
+      analogWrite(p1Pin1, intensity1);
+      analogWrite(p1Pin2, 0);
     }
   // Cooling side 1, heating side 2
   } else {
     if (temperatures[0] < minimumTemperatureSide1 || temperatures[1] > maximumTemperatureSide2) {
-      analogWrite(p1_pin1, 0);
-      analogWrite(p1_pin2, 0);
+      analogWrite(p1Pin1, 0);
+      analogWrite(p1Pin2, 0);
     } else {
-      analogWrite(p1_pin1, 0);
-      analogWrite(p1_pin2, intensity1);
+      analogWrite(p1Pin1, 0);
+      analogWrite(p1Pin2, intensity1);
     }
   }
   
@@ -96,20 +99,20 @@ void loop() {
   // Heating side 1, cooling side 2
   if (direction2 == 0) {
     if (temperatures[2] > maximumTemperatureSide1 || temperatures[3] < minimumTemperatureSide2) {
-      analogWrite(p2_pin1, 0);
-      analogWrite(p2_pin2, 0);
+      analogWrite(p2Pin1, 0);
+      analogWrite(p2Pin2, 0);
     } else {
-      analogWrite(p2_pin1, intensity1);
-      analogWrite(p2_pin2, 0);
+      analogWrite(p2Pin1, intensity1);
+      analogWrite(p2Pin2, 0);
     }
   // Cooling side 1, heating side 2
   } else {
     if (temperatures[2] < minimumTemperatureSide1 || temperatures[3] > maximumTemperatureSide2) {
-      analogWrite(p2_pin1, 0);
-      analogWrite(p2_pin2, 0);
+      analogWrite(p2Pin1, 0);
+      analogWrite(p2Pin2, 0);
     } else {
-      analogWrite(p2_pin1, 0);
-      analogWrite(p2_pin2, intensity1);
+      analogWrite(p2Pin1, 0);
+      analogWrite(p2Pin2, intensity1);
     }
   }
 }
@@ -125,7 +128,7 @@ void readEvent(int count) {
   // 2 - Read Sensors
   // 3 - Set Minimum and Maximum temperatures | minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
   if (command == 0) {
-    Wire.write('p');
+    Wire.write(boardType);
   } else if (command == 1) {
     intensity1 = Wire.read();
     direction1 = Wire.read();
@@ -143,10 +146,10 @@ void readEvent(int count) {
 
 void calculateTemperatures() {
   // Read sensor values
-  sensorReadings[0] = analogRead(t1_pin);
-  sensorReadings[1] = analogRead(t2_pin);
-  sensorReadings[2] = analogRead(t3_pin);
-  sensorReadings[3] = analogRead(t4_pin);
+  sensorReadings[0] = analogRead(t1Pin);
+  sensorReadings[1] = analogRead(t2Pin);
+  sensorReadings[2] = analogRead(t3Pin);
+  sensorReadings[3] = analogRead(t4Pin);
   
   for (int i = 0; i < 4; i++) {
     // Convert to voltage
