@@ -32,8 +32,8 @@ byte minimumTemperatureSide2 = 45; // 0-100
 
 // For storing temperature values
 // [ Peltier1_Side1, Peltier1_Side2, Peltier2_Side1, Peltier2_Side2 ]
-float sensorReadings[4];
-float temperatures[4];
+int sensorReadings[4];
+byte temperatures[4];
 
 // For calculating temperature
 // Thermistor properties
@@ -64,7 +64,7 @@ void setup() {
   pinMode(t4Pin, INPUT);
 
   // Initialize I2C communication
-  Wire.begin(slave_add);
+  Wire.begin(slaveAddress);
   Wire.onReceive(readEvent);
   
 }
@@ -135,7 +135,10 @@ void readEvent(int count) {
     intensity2 = Wire.read();
     direction2 = Wire.read();
   } else if (command == 2) {
-    Wire.write(temperatures);
+    intensity1 = Wire.read();
+    direction1 = Wire.read();
+    intensity2 = Wire.read();
+    direction2 = Wire.read();
   } else if (command == 3) {
     minimumTemperatureSide1 = Wire.read();
     maximumTemperatureSide1 = Wire.read();
