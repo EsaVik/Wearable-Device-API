@@ -1,7 +1,14 @@
 #include <Wire.h>
 
+// Struct for storing state information, including current command, for peltier slave board
+struct peltierBoard {
+  byte address;
+  long remainingDuration;
+  byte temperatureTarget1;
+  byte temperatureTarget2;
+};
+
 // For keeping track of time since the start of the program
-unsigned long currentTime = 0;
 unsigned long elapsedTime = 0;
 unsigned long previousTime = 0;
 
@@ -12,24 +19,20 @@ String controlMessage;
 // TODO: Currently supports only 1
 peltierBoard peltier;
 
-// Struct for storing state information, including current command, for peltier slave board
-struct peltierBoard {
-  byte address;
-  long remainingDuration;
-  byte temperatureTarget1;
-  byte temperatureTarget2;
-}
+// For temporarily storing temperature information retrieved from a slave board
+byte temperatures[4];
 
 void setup() {
   // Initialize serial communication for receiving commands
   Serial.begin(9600);
   // Initialize I2C communication with slave boards
   Wire.begin();
-  // Scan for all devices
+  // TODO: Scan for all devices
+  peltier = {12, 0, 0, 0};
 }
 
 void loop() {
-  // Check for incoming control messages without interrupting control loop
+  // Check for incoming control messages without interrupting control loop  
   if (Serial.available()) {
     // Read entire control message to be handled
     while (Serial.available()) {
@@ -40,20 +43,32 @@ void loop() {
     }
     // Handle control message
     handleMessage();
-    controlMessage = '';
+    controlMessage = "";
   }
   
   // TODO: For each peltier board
   // If remainingDuration is 0, the board is either off, or continuing indefinitely
   // If remainingDuration > 0, check whether to switch off the board (duration has run out)
   if (peltier.remainingDuration > 0) {
-    //peltier.remainingDuration = peltier.remainingDuration + 
+    peltier.remainingDuration = peltier.remainingDuration - elapsedTime;
+    if (peltier.remainingDuration <= 0) {
+      peltierSetIntensity(peltier.address, 0, 0, 0, 0);
+      peltier.remainingDuration = 0;
+      peltier.temperatureTarget1 = 0;
+      peltier.temperatureTarget2 = 0;
+    }
+  }
+  // If a temperatureTarget has been set for peltier, adjust pwm accordingly
+  // Otherwise, peltier has been set for constant pwm, so let it continue
+  if (peltier.temperatureTarget1 > 0) {
+    peltierReadSensors(peltier.address);
+    // If below set target, heat up, otherwise cool down
+    peltierSetIntensity(peltier.address, 255, temperatures[0] < peltier.temperatureTarget1, 255, temperatures[2] < peltier.temperatureTarget2);
   }
   
   // Update timestamps
-  //currentTime = ;
-  //elapsedTime = ;
-  //previousTime = ;
+  elapsedTime = millis() - previousTime;
+  previousTime = previousTime + elapsedTime;
 }
 
 // Message format:
@@ -76,8 +91,32 @@ void handleMessage() {
       byte intensity2 = controlMessage.substring(9,12).toInt();
       byte direction2 = controlMessage[13] - '0';
       long duration = controlMessage.substring(14).toInt();
+      peltierSetIntensity(deviceAddress, intensity1, direction1, intensity2, direction2);
     }
   }
 }
 
-void peltierSetIntensity(byte address, )
+// I2C Library for Peltier Slave Board API
+
+// Set Intensity | command intensity1 direction1 intensity2 direction2
+void peltierSetIntensity(byte address, byte intensity1, byte direction1, byte intensity2, byte direction2) {
+  Wire.beginTransmission(address);
+  Wire.write(1);
+  Wire.write(intensity1);
+  Wire.write(direction1);
+  Wire.write(intensity2);
+  Wire.write(direction2);
+  Wire.endTransmission();
+}
+
+// Read Sensors | command
+void *peltierReadSensors(byte address) {
+  Wire.beginTransmission(address);
+  Wire.write(2);
+  Wire.endTransmission();
+
+  Wire.requestFrom(address, 4);
+  for (int i = 0; i < 4; i++) {
+    temperatures[i] = Wire.read();
+  }
+}
