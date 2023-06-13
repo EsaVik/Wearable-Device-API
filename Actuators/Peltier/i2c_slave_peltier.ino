@@ -7,16 +7,16 @@ char boardType = 'p';
 byte slaveAddress = 2;
 
 // Output pins for controlling peltier elements
-byte p1Pin1 = 1;
-byte p1Pin2 = 2;
-byte p2Pin1 = 3;
-byte p2Pin2 = 4;
+byte p1Pin1 = 0; //peltier 1 (P1)
+byte p1Pin2 = 1; //peltier 1 (P1)
+byte p2Pin1 = 5; //peltier 2 (P2)
+byte p2Pin2 = 10; //peltier 2 (P2)
 
 // Input pins for thermistors
-byte t1Pin = 5;
-byte t2Pin = 6;
-byte t3Pin = 7;
-byte t4Pin = 8;
+byte t1Pin = 2; //thermistor 1 (S1)
+byte t2Pin = 3; //thermistor 2 (S2)
+byte t3Pin = 8; //thermistor 3 (S3)
+byte t4Pin = 9; //thermistor 3 (S4)
 
 
 // Variables for reading control messages
@@ -66,7 +66,6 @@ void setup() {
   // Initialize I2C communication
   Wire.begin(slaveAddress);
   Wire.onReceive(readEvent);
-  
 }
 
 void loop() {
