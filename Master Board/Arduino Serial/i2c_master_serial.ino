@@ -83,17 +83,58 @@ void handleMessage() {
   // 2 - Set Minimum and Maximum temperatures | address minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
   // 3 - Set Target Temperature | address target1 target2 duration
   if (controlMessage[0] == 'p') {
+    // Convert ASCII to 3 digit number
+    byte deviceAddress = controlMessage.substring(2,5).toInt();
     if (controlMessage[1] == '0') {
-      // Convert ASCII to 3 digit number
-      byte deviceAddress = controlMessage.substring(2,5).toInt();
       byte intensity1 = controlMessage.substring(5,8).toInt();
       byte direction1 = controlMessage[8] - '0';
       byte intensity2 = controlMessage.substring(9,12).toInt();
       byte direction2 = controlMessage[13] - '0';
       long duration = controlMessage.substring(14).toInt();
       peltierSetIntensity(deviceAddress, intensity1, direction1, intensity2, direction2);
+      Serial.println("Code: 0");
+    } else if (controlMessage[1] == '1') {
+      // Read sensors
+      peltierReadSensors(deviceAddress);
+      // Write output to Serial - ts: timestamp, values: [value]
+      Serial.print("ts:");
+      Serial.print(millis());
+      Serial.print("values:[");
+      for (int i = 0; i < 3; i++) {
+        Serial.print(temperatures[i]);
+        Serial.print(",");
+      }
+      Serial.print(temperatures[3]);
+      Serial.println("]");
     }
   }
+}
+
+// General API functions
+
+// TODO: Retrieve list of connected I2C devices, along with type
+void getDevices() {
+  
+}
+
+// TODO: Loop over all connected I2C actuators, sending a shutdown signal
+void softShutdown() {
+  
+}
+
+// TODO: Cut power to I2C device power source
+void hardShutdown() {
+  
+}
+
+// TODO: Multiply all temperature intensity values with this multiplier
+void setTemperatureMultiplier(float multiplier) {
+  
+}
+
+// TODO: Multiply all vibration intensity values with this multiplier
+void setVibrationMultiplier(float multiplier) {
+  
 }
 
 // I2C Library for Peltier Slave Board API
@@ -110,7 +151,7 @@ void peltierSetIntensity(byte address, byte intensity1, byte direction1, byte in
 }
 
 // Read Sensors | command
-void *peltierReadSensors(byte address) {
+void peltierReadSensors(byte address) {
   Wire.beginTransmission(address);
   Wire.write(2);
   Wire.endTransmission();
@@ -119,4 +160,15 @@ void *peltierReadSensors(byte address) {
   for (int i = 0; i < 4; i++) {
     temperatures[i] = Wire.read();
   }
+}
+
+// Set Minimum and Maximum temperatures | command minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
+void peltierSetIntensity(byte address, byte minimumTemperatureSide1, byte maximumTemperatureSide1, byte minimumTemperatureSide2, byte maximumTemperatureSide2) {
+  Wire.beginTransmission(address);
+  Wire.write(3);
+  Wire.write(minimumTemperatureSide1);
+  Wire.write(maximumTemperatureSide1);
+  Wire.write(minimumTemperatureSide2);
+  Wire.write(maximumTemperatureSide2);
+  Wire.endTransmission();
 }
