@@ -184,8 +184,8 @@ void readEvent(int count) {
     temperatureTarget1 = Wire.read();
     temperatureTarget2 = Wire.read();
     for (int i = 0 ; i < 4 ; i++) {
-		duration = (duration << 8) + Wire.read();
-	}
+		  duration = (duration << 8) + Wire.read();
+	  }
   }
 }
 
