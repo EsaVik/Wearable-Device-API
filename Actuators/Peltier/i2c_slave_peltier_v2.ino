@@ -163,18 +163,18 @@ void readEvent(int count) {
   // 2 - Set Minimum and Maximum temperatures | minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
   // 3 - Set Temperature Targets | temperatureTarget1 temperatureTarget2 duration
   if (command == 0) {
-		// No handling needed
+    // No handling needed
   } else if (command == 1) {
     intensity1 = Wire.read();
     direction1 = Wire.read();
     intensity2 = Wire.read();
     direction2 = Wire.read();
-	  duration = 0;
-	  for (int i = 0 ; i < 4 ; i++) {
-			duration = (duration << 8) + Wire.read();
-		}
+    duration = 0;
+    for (int i = 0 ; i < 4 ; i++) {
+      duration = (duration << 8) + Wire.read();
+    }
   } else if (command == 2) {
-		// No handling needed
+    // No handling needed
   } else if (command == 3) {
     minimumTemperatureSide1 = Wire.read();
     maximumTemperatureSide1 = Wire.read();
@@ -193,12 +193,12 @@ void readEvent(int count) {
 // 0 - Get Type
 // 2 - Read Sensors
 void sendEvent() {
-	if (command == 0) {
-		Wire.write(boardType);
-	} else if (command == 2) {
-		// Convert temperatures to char array for easy writing
-		Wire.write((char*) temperatures, 4);
-	}
+  if (command == 0) {
+    Wire.write(boardType);
+  } else if (command == 2) {
+    // Convert temperatures to char array for easy writing
+    Wire.write((char*) temperatures, 4);
+  }
 }
 
 void calculateTemperatures() {
@@ -212,7 +212,7 @@ void calculateTemperatures() {
     // Calculate voltage over 10k resistor
     // Supply voltage is 5V and ADC has values between 0-1023
     VR = (VCC / 1023.00) * sensorReadings[i];
-		// Calculate voltage over thermistor
+    // Calculate voltage over thermistor
     VT = VCC - VR;
     // Calculate resistance caused by temperature
     RT = sensorReadings[i] / (VR / R);
