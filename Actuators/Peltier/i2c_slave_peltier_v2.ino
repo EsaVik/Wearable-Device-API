@@ -52,7 +52,7 @@ int R = 10000; // R = 10KΩ
 int RT0 = 10000; // RT0 = 10KΩ
 int B = 3977; // B = 3977
 float T0 = 298.15; // T0 in Kelvin
-float VR, RT, ln, TX;
+float VR, VT, RT, ln, TX;
 
 
 
@@ -71,7 +71,10 @@ void setup() {
 
   // Initialize I2C communication
   Wire.begin(slaveAddress);
+  // Function for handling incoming commands
   Wire.onReceive(readEvent);
+  // Function for handling requests
+  Wire.onRequest(sendEvent);
 }
 
 void loop() {
@@ -156,9 +159,8 @@ void readEvent(int count) {
   // Commands:
   // 0 - Get Type
   // 1 - Set Intensity | intensity1 direction1 intensity2 direction2 duration
-  // 2 - Read Sensors
-  // 3 - Set Minimum and Maximum temperatures | minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
-  // 4 - Set Temperature Targets | temperatureTarget1 temperatureTarget2 duration
+  // 2 - Set Minimum and Maximum temperatures | minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
+  // 3 - Set Temperature Targets | temperatureTarget1 temperatureTarget2 duration
   if (command == 0) {
     Wire.write(boardType);
   } else if (command == 1) {
@@ -168,17 +170,23 @@ void readEvent(int count) {
     direction2 = Wire.read();
     duration = Wire.read();
   } else if (command == 2) {
-    Wire.write((char*) temperatures, 4);
-  } else if (command == 3) {
     minimumTemperatureSide1 = Wire.read();
     maximumTemperatureSide1 = Wire.read();
     minimumTemperatureSide2 = Wire.read();
     maximumTemperatureSide2 = Wire.read();
-  } else if (command == 4) {
+  } else if (command == 3) {
     temperatureTarget1 = Wire.read();
     temperatureTarget2 = Wire.read();
     duration = Wire.read();
   }
+}
+
+// Handles incoming requests
+// Currently only request is read sensors. Send the most up to date temperature values
+// If need to implement more, add a readEvent for recognizing request type, followed by handling in this function
+void sendEvent() {
+	// Convert temperatures to char array for easy writing
+  Wire.write((char*) temperatures, 4);
 }
 
 void calculateTemperatures() {
@@ -189,16 +197,16 @@ void calculateTemperatures() {
   sensorReadings[3] = analogRead(t4Pin);
   
   for (int i = 0; i < 4; i++) {
-    // Convert to voltage
+    // Calculate voltage over 10k resistor
     // Supply voltage is 5V and ADC has values between 0-1023
-    sensorReadings[i] = (VCC / 1023.00) * sensorReadings[i];
-    VR = VCC - sensorReadings[i];
-    // Calculate resistance of RT+
+    VR = (VCC / 1023.00) * sensorReadings[i];
+		// Calculate voltage over thermistor
+    VT = VCC - VR;
+    // Calculate resistance caused by temperature
     RT = sensorReadings[i] / (VR / R);
-  
+    // Calculate temperature in Kelvin based on the measurements
     ln = log(RT / RT0);
     TX = (1 / ((ln / B) + (1 / T0)));
-  
     // Convert to celsius and store
     temperatures[i] = TX - 273.15;
   }
