@@ -24,7 +24,7 @@ byte intensity1 = 0; // 0-255
 byte intensity2 = 0; // 0-255
 byte direction1 = 0; // 0 (heating) or 1 (cooling)
 byte direction2 = 0; // 0 (heating) or 1 (cooling)
-unsigned long duration = 0;
+long duration = 0;
 byte maximumTemperatureSide1 = 45; // 0-100
 byte maximumTemperatureSide2 = 45; // 0-100
 byte minimumTemperatureSide1 = 45; // 0-100
@@ -159,34 +159,46 @@ void readEvent(int count) {
   // Commands:
   // 0 - Get Type
   // 1 - Set Intensity | intensity1 direction1 intensity2 direction2 duration
+  // 2 - Read Sensors
   // 2 - Set Minimum and Maximum temperatures | minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
   // 3 - Set Temperature Targets | temperatureTarget1 temperatureTarget2 duration
   if (command == 0) {
-    Wire.write(boardType);
+		// No handling needed
   } else if (command == 1) {
     intensity1 = Wire.read();
     direction1 = Wire.read();
     intensity2 = Wire.read();
     direction2 = Wire.read();
-    duration = Wire.read();
+	  duration = 0;
+	  for (int i = 0 ; i < 4 ; i++) {
+			duration = (duration << 8) + Wire.read();
+		}
   } else if (command == 2) {
+		// No handling needed
+  } else if (command == 3) {
     minimumTemperatureSide1 = Wire.read();
     maximumTemperatureSide1 = Wire.read();
     minimumTemperatureSide2 = Wire.read();
     maximumTemperatureSide2 = Wire.read();
-  } else if (command == 3) {
+  } else if (command == 4) {
     temperatureTarget1 = Wire.read();
     temperatureTarget2 = Wire.read();
-    duration = Wire.read();
+    for (int i = 0 ; i < 4 ; i++) {
+		duration = (duration << 8) + Wire.read();
+	}
   }
 }
 
 // Handles incoming requests
-// Currently only request is read sensors. Send the most up to date temperature values
-// If need to implement more, add a readEvent for recognizing request type, followed by handling in this function
+// 0 - Get Type
+// 2 - Read Sensors
 void sendEvent() {
-	// Convert temperatures to char array for easy writing
-  Wire.write((char*) temperatures, 4);
+	if (command == 0) {
+		Wire.write('p');
+	} else if (command == 2) {
+		// Convert temperatures to char array for easy writing
+		Wire.write((char*) temperatures, 4);
+	}
 }
 
 void calculateTemperatures() {
