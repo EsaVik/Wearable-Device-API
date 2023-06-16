@@ -194,7 +194,7 @@ void readEvent(int count) {
 // 2 - Read Sensors
 void sendEvent() {
 	if (command == 0) {
-		Wire.write('p');
+		Wire.write(boardType);
 	} else if (command == 2) {
 		// Convert temperatures to char array for easy writing
 		Wire.write((char*) temperatures, 4);
