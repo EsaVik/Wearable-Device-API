@@ -1,23 +1,7 @@
 #include <Wire.h>
 
-// Struct for storing state information, including current command, for peltier slave board
-struct peltierBoard {
-  byte address;
-  long remainingDuration;
-  byte temperatureTarget1;
-  byte temperatureTarget2;
-};
-
-// For keeping track of time since the start of the program
-unsigned long elapsedTime = 0;
-unsigned long previousTime = 0;
-
 // For storing control messages from serial
 String controlMessage;
-
-// For storing information about all peltier slave boards
-// TODO: Currently supports only 1
-peltierBoard peltier;
 
 // For temporarily storing temperature information retrieved from a slave board
 byte temperatures[4];
@@ -28,47 +12,28 @@ void setup() {
   // Initialize I2C communication with slave boards
   Wire.begin();
   // TODO: Scan for all devices
-  peltier = {12, 0, 0, 0};
+  
 }
 
 void loop() {
-  // Check for incoming control messages without interrupting control loop  
+  // Check for incoming control messages without interrupting control loop
   if (Serial.available()) {
+    char inByte = Serial.read();
     // Read entire control message to be handled
-    while (Serial.available()) {
-      char inByte = Serial.read();
-      if (inByte != '\n') {
+    while (inByte != '\n') {
+      if (Serial.available()) {
         controlMessage += inByte;
+				inByte = Serial.read();
       }
     }
+
     // Handle control message
     handleMessage();
     controlMessage = "";
   }
-  
-  // TODO: For each peltier board
-  // If remainingDuration is 0, the board is either off, or continuing indefinitely
-  // If remainingDuration > 0, check whether to switch off the board (duration has run out)
-  if (peltier.remainingDuration > 0) {
-    peltier.remainingDuration = peltier.remainingDuration - elapsedTime;
-    if (peltier.remainingDuration <= 0) {
-      peltierSetIntensity(peltier.address, 0, 0, 0, 0);
-      peltier.remainingDuration = 0;
-      peltier.temperatureTarget1 = 0;
-      peltier.temperatureTarget2 = 0;
-    }
-  }
-  // If a temperatureTarget has been set for peltier, adjust pwm accordingly
-  // Otherwise, peltier has been set for constant pwm, so let it continue
-  if (peltier.temperatureTarget1 > 0) {
-    peltierReadSensors(peltier.address);
-    // If below set target, heat up, otherwise cool down
-    peltierSetIntensity(peltier.address, 255, temperatures[0] < peltier.temperatureTarget1, 255, temperatures[2] < peltier.temperatureTarget2);
-  }
-  
-  // Update timestamps
-  elapsedTime = millis() - previousTime;
-  previousTime = previousTime + elapsedTime;
+	
+	// Any required control functionality
+	
 }
 
 // Message format:
@@ -91,7 +56,7 @@ void handleMessage() {
       byte intensity2 = controlMessage.substring(9,12).toInt();
       byte direction2 = controlMessage[13] - '0';
       long duration = controlMessage.substring(14).toInt();
-      peltierSetIntensity(deviceAddress, intensity1, direction1, intensity2, direction2);
+      peltierSetIntensity(deviceAddress, intensity1, direction1, intensity2, direction2, duration);
       Serial.println("Code: 0");
     } else if (controlMessage[1] == '1') {
       // Read sensors
@@ -114,7 +79,14 @@ void handleMessage() {
 
 // TODO: Retrieve list of connected I2C devices, along with type
 void getDevices() {
-  
+  for (int i = 1 ; i < 128; i++) {
+		Wire.beginTransmission(i);
+		byte error = Wire.endTransmission();
+ 
+    if (error == 0) {
+			// TODO: Store device address and type
+		}
+	}
 }
 
 // TODO: Loop over all connected I2C actuators, sending a shutdown signal
@@ -137,38 +109,69 @@ void setVibrationMultiplier(float multiplier) {
   
 }
 
+// General I2C Library
+
+// Get Type | command
+char i2cGetType(byte address) {
+	Wire.beginTransmission(address);
+  Wire.write(0);
+	Wire.endTransmission();
+	
+	Wire.requestFrom((int) address, 1);
+  while (true) {
+    if (Wire.available()) {
+      return Wire.read();
+    }
+  }
+}
+
 // I2C Library for Peltier Slave Board API
 
 // Set Intensity | command intensity1 direction1 intensity2 direction2
-void peltierSetIntensity(byte address, byte intensity1, byte direction1, byte intensity2, byte direction2) {
+void peltierSetIntensity(byte address, byte intensity1, byte direction1, byte intensity2, byte direction2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(1);
   Wire.write(intensity1);
   Wire.write(direction1);
   Wire.write(intensity2);
   Wire.write(direction2);
+	Wire.write(duration);
   Wire.endTransmission();
 }
 
 // Read Sensors | command
 void peltierReadSensors(byte address) {
-  Wire.beginTransmission(address);
+	Wire.beginTransmission(address);
   Wire.write(2);
-  Wire.endTransmission();
-
-  Wire.requestFrom(address, 4);
-  for (int i = 0; i < 4; i++) {
-    temperatures[i] = Wire.read();
+	Wire.endTransmission();
+	
+	Wire.requestFrom((int) address, 4);
+  int i = 0;
+  while (i < 4) {
+    if (Wire.available()) {
+      temperatures[i] = Wire.read();
+      i++;
+    }
   }
 }
 
 // Set Minimum and Maximum temperatures | command minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
-void peltierSetIntensity(byte address, byte minimumTemperatureSide1, byte maximumTemperatureSide1, byte minimumTemperatureSide2, byte maximumTemperatureSide2) {
+void peltierSetMinimumMaximum(byte address, byte minimumTemperatureSide1, byte maximumTemperatureSide1, byte minimumTemperatureSide2, byte maximumTemperatureSide2) {
   Wire.beginTransmission(address);
   Wire.write(3);
   Wire.write(minimumTemperatureSide1);
   Wire.write(maximumTemperatureSide1);
   Wire.write(minimumTemperatureSide2);
   Wire.write(maximumTemperatureSide2);
-  Wire.endTransmission();
+	Wire.endTransmission();
+}
+
+// Set Minimum and Maximum temperatures | command target1 target2
+void peltierSetTarget(byte address, byte temperatureTarget1, byte temperatureTarget2, long duration) {
+  Wire.beginTransmission(address);
+  Wire.write(4);
+  Wire.write(temperatureTarget1);
+  Wire.write(temperatureTarget2);
+	Wire.write(duration);
+	Wire.endTransmission();
 }
