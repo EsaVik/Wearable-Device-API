@@ -19,7 +19,18 @@ byte t3Pin = 8; //thermistor 3 (S3)
 byte t4Pin = 9; //thermistor 3 (S4)
 
 // Variables for reading control messages
+// For concurrency reasons, some are duplicates of program state
 byte command; // 0-3
+byte newIntensity1 = 0; // 0-255
+byte newIntensity2 = 0; // 0-255
+byte newDirection1 = 0; // 0 (heating) or 1 (cooling)
+byte newDirection2 = 0; // 0 (heating) or 1 (cooling)
+long newDuration = 0;
+byte newTemperatureTarget1 = 0;
+byte newTemperatureTarget2 = 0;
+bool updateState = false;
+
+// Variables for program state
 byte intensity1 = 0; // 0-255
 byte intensity2 = 0; // 0-255
 byte direction1 = 0; // 0 (heating) or 1 (cooling)
@@ -80,6 +91,18 @@ void setup() {
 void loop() {
   // Update temperature values
   calculateTemperatures();
+
+  // If a new command has been received, update state
+  if (updateState) {
+    duration = newDuration;
+    intensity1 = newIntensity1;
+    intensity2 = newIntensity2;
+    temperatureTarget1 = newTemperatureTarget1;
+    temperatureTarget2 = newTemperatureTarget2;
+    direction1 = newDirection1;
+    direction2 = newDirection2;
+    updateState = false;
+  }
 
   // If duration is 0, the board is either off, or continuing indefinitely
   // If duration > 0, check whether to switch off the board (duration has run out)
@@ -165,14 +188,15 @@ void readEvent(int count) {
   if (command == 0) {
     // No handling needed
   } else if (command == 1) {
-    intensity1 = Wire.read();
-    direction1 = Wire.read();
-    intensity2 = Wire.read();
-    direction2 = Wire.read();
-    duration = 0;
+    newIntensity1 = Wire.read();
+    newDirection1 = Wire.read();
+    newIntensity2 = Wire.read();
+    newDirection2 = Wire.read();
+    newDuration = 0;
     for (int i = 0 ; i < 4 ; i++) {
-      duration = (duration << 8) + Wire.read();
+      newDuration = newDuration << 8 | Wire.read();
     }
+    updateState = true;
   } else if (command == 2) {
     // No handling needed
   } else if (command == 3) {
@@ -181,11 +205,13 @@ void readEvent(int count) {
     minimumTemperatureSide2 = Wire.read();
     maximumTemperatureSide2 = Wire.read();
   } else if (command == 4) {
-    temperatureTarget1 = Wire.read();
-    temperatureTarget2 = Wire.read();
+    newTemperatureTarget1 = Wire.read();
+    newTemperatureTarget2 = Wire.read();
+    newDuration = 0;
     for (int i = 0 ; i < 4 ; i++) {
-      duration = (duration << 8) + Wire.read();
+      newDuration = (newDuration << 8) + Wire.read();
     }
+    updateState = true;
   }
 }
 
