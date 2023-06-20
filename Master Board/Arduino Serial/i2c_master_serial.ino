@@ -135,7 +135,7 @@ void peltierSetIntensity(byte address, byte intensity1, byte direction1, byte in
   Wire.write(direction1);
   Wire.write(intensity2);
   Wire.write(direction2);
-	Wire.write(duration);
+	Wire.write((char*) &duration, 4);
   Wire.endTransmission();
 }
 
