@@ -127,7 +127,7 @@ char i2cGetType(byte address) {
 
 // I2C Library for Peltier Slave Board API
 
-// Set Intensity | command intensity1 direction1 intensity2 direction2
+// Set Intensity | command intensity1 direction1 intensity2 direction2 duration
 void peltierSetIntensity(byte address, byte intensity1, byte direction1, byte intensity2, byte direction2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(1);
@@ -166,12 +166,12 @@ void peltierSetMinimumMaximum(byte address, byte minimumTemperatureSide1, byte m
 	Wire.endTransmission();
 }
 
-// Set Minimum and Maximum temperatures | command target1 target2
+// Set Minimum and Maximum temperatures | command target1 target2 duration
 void peltierSetTarget(byte address, byte temperatureTarget1, byte temperatureTarget2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(4);
   Wire.write(temperatureTarget1);
   Wire.write(temperatureTarget2);
-	Wire.write(duration);
+	Wire.write((char*) &duration, 4);
 	Wire.endTransmission();
 }
