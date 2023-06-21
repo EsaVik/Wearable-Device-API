@@ -82,8 +82,13 @@ void readEvent(int count) {
     newIntensity1 = Wire.read();
     newIntensity2 = Wire.read();
 	  newDuration = 0;
-	  for (int i = 0 ; i < 4 ; i++) {
-			newDuration = (newDuration << 8) + Wire.read();
+	  // Store all 4 bytes of duration in a long int
+    for (int i = 0 ; i < 4 ; i++) {
+      long temporaryVariable = 0;
+      // Read byte and move it to correct position
+      temporaryVariable = (temporaryVariable | Wire.read()) << (8 * i);
+      // Store byte in correct position in newDuration
+			newDuration = newDuration | temporaryVariable;
 		}
     updateState = true;
   }

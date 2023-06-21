@@ -193,9 +193,14 @@ void readEvent(int count) {
     newIntensity2 = Wire.read();
     newDirection2 = Wire.read();
     newDuration = 0;
+    // Store all 4 bytes of duration in a long int
     for (int i = 0 ; i < 4 ; i++) {
-      newDuration = newDuration << 8 | Wire.read();
-    }
+      long temporaryVariable = 0;
+      // Read byte and move it to correct position
+      temporaryVariable = (temporaryVariable | Wire.read()) << (8 * i);
+      // Store byte in correct position in newDuration
+			newDuration = newDuration | temporaryVariable;
+		}
     updateState = true;
   } else if (command == 2) {
     // No handling needed
@@ -208,9 +213,14 @@ void readEvent(int count) {
     newTemperatureTarget1 = Wire.read();
     newTemperatureTarget2 = Wire.read();
     newDuration = 0;
+    // Store all 4 bytes of duration in a long int
     for (int i = 0 ; i < 4 ; i++) {
-      newDuration = (newDuration << 8) + Wire.read();
-    }
+      long temporaryVariable = 0;
+      // Read byte and move it to correct position
+      temporaryVariable = (temporaryVariable | Wire.read()) << (8 * i);
+      // Store byte in correct position in newDuration
+			newDuration = newDuration | temporaryVariable;
+		}
     updateState = true;
   }
 }
