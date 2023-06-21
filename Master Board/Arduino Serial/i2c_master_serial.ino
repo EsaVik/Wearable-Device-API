@@ -72,6 +72,19 @@ void handleMessage() {
       Serial.print(temperatures[3]);
       Serial.println("]");
     }
+  // Vibrator Device API
+  // Commands:
+  // 0 - Set Intensity | address intensity1 intensity2 duration
+  } else if (controlMessage[0] == 'v') {
+    // Convert ASCII to 3 digit number
+    byte deviceAddress = controlMessage.substring(2,5).toInt();
+    if (controlMessage[1] == '0') {
+      byte intensity1 = controlMessage.substring(5,8).toInt();
+      byte intensity2 = controlMessage.substring(8,11).toInt();
+      long duration = controlMessage.substring(11).toInt();
+      vibratorSetIntensity(deviceAddress, intensity1, intensity2, duration);
+      Serial.println("Code: 0");
+    }
   }
 }
 
@@ -174,4 +187,16 @@ void peltierSetTarget(byte address, byte temperatureTarget1, byte temperatureTar
   Wire.write(temperatureTarget2);
 	Wire.write((char*) &duration, 4);
 	Wire.endTransmission();
+}
+
+// I2C Library for Vibrator Slave Board API
+
+// Set Intensity | command intensity1 intensity2 duration
+void vibratorSetIntensity(byte address, byte intensity1, byte intensity2, long duration) {
+  Wire.beginTransmission(address);
+  Wire.write(1);
+  Wire.write(intensity1);
+  Wire.write(intensity2);
+	Wire.write((char*) &duration, 4);
+  Wire.endTransmission();
 }
