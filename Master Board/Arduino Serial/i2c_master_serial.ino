@@ -9,6 +9,10 @@ byte temperatures[4];
 // For storing all connected boards
 char boards[128] = {0};
 
+// For storing intensityMultipliers
+float temperatureMultiplier = 1;
+float vibrationMultiplier = 1;
+
 void setup() {
   // Initialize serial communication for receiving commands
   Serial.begin(9600);
@@ -39,18 +43,59 @@ void loop() {
 	
 }
 
+// Serial API
 // Message format:
 // First byte - Device type
 // Second byte - Command type
 // Third/nth byte - Parameters
 void handleMessage() {
+  // General API
+  // Commands:
+  // 0 - Get Devices
+  // 1 - Soft Shutdown
+  // 2 - Hard Shutdown
+  // 3 - Set Temperature Multiplier | multiplier
+  // 4 - Set Vibration Multiplier | multiplier
+  if (controlMessage[0] == 'g') {
+    if (controlMessage[1] == '0') {
+      bool first = true;
+      Serial.print("devices:[");
+      for (int i = 1; i < 128; i++) {
+        if (boards[i]) {
+          if (!first) {
+            Serial.print(',');
+          }
+          Serial.print('(');
+          Serial.print(i);
+          Serial.print(',');
+          Serial.print(boards[i]);
+          Serial.print(')');
+          first = false;
+        }
+      }
+      Serial.println(']');
+    } else if (controlMessage[1] == '1') {
+      softShutdown();
+      Serial.println("code: 0");
+    } else if (controlMessage[1] == '2') {
+      hardShutdown();
+      Serial.println("code: 0");
+    } else if (controlMessage[1] == '3') {
+      float multiplier = controlMessage.substring(4).toFloat();
+      setTemperatureMultiplier(multiplier);
+      Serial.println("code: 0");
+    }  else if (controlMessage[1] == '4') {
+      float multiplier = controlMessage.substring(4).toFloat();
+      setVibrationMultiplier(multiplier);
+      Serial.println("code: 0");
+    }
   // Peltier Device API
   // Commands:
   // 0 - Set Intensity | address intensity1 direction1 intensity2 direction2 duration
   // 1 - Read Sensors | address
   // 2 - Set Minimum and Maximum temperatures | address minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
   // 3 - Set Target Temperature | address target1 target2 duration
-  if (controlMessage[0] == 'p') {
+  } else if (controlMessage[0] == 'p') {
     // Convert ASCII to 3 digit number
     byte deviceAddress = controlMessage.substring(2,5).toInt();
     if (controlMessage[1] == '0') {
@@ -60,7 +105,7 @@ void handleMessage() {
       byte direction2 = controlMessage[12] - '0';
       long duration = controlMessage.substring(13).toInt();
       peltierSetIntensity(deviceAddress, intensity1, direction1, intensity2, direction2, duration);
-      Serial.println("Code: 0");
+      Serial.println("code: 0");
     } else if (controlMessage[1] == '1') {
       // Read sensors
       peltierReadSensors(deviceAddress);
@@ -86,7 +131,7 @@ void handleMessage() {
       byte intensity2 = controlMessage.substring(8,11).toInt();
       long duration = controlMessage.substring(11).toInt();
       vibratorSetIntensity(deviceAddress, intensity1, intensity2, duration);
-      Serial.println("Code: 0");
+      Serial.println("code: 0");
     }
   }
 }
@@ -126,13 +171,17 @@ void hardShutdown() {
 
 // TODO: Multiply all temperature intensity values with this multiplier
 void setTemperatureMultiplier(float multiplier) {
-  
+  temperatureMultiplier = multiplier;
 }
 
 // TODO: Multiply all vibration intensity values with this multiplier
 void setVibrationMultiplier(float multiplier) {
-  
+  vibrationMultiplier = multiplier;
 }
+
+// #######################
+// #I2C Library Functions#
+// #######################
 
 // General I2C Library
 
