@@ -6,13 +6,16 @@ String controlMessage;
 // For temporarily storing temperature information retrieved from a slave board
 byte temperatures[4];
 
+// For storing all connected boards
+char boards[128] = {0};
+
 void setup() {
   // Initialize serial communication for receiving commands
   Serial.begin(9600);
   // Initialize I2C communication with slave boards
   Wire.begin();
-  // TODO: Scan for all devices
-  
+  // Scan for all devices
+  getDevices();
 }
 
 void loop() {
@@ -90,21 +93,30 @@ void handleMessage() {
 
 // General API functions
 
-// TODO: Retrieve list of connected I2C devices, along with type
+// Retrieve list of connected I2C devices, along with type
 void getDevices() {
   for (int i = 1 ; i < 128; i++) {
 		Wire.beginTransmission(i);
 		byte error = Wire.endTransmission();
  
     if (error == 0) {
-			// TODO: Store device address and type
-		}
+			// Store device address and type
+      boards[i] = i2cGetType(i);
+		} else {
+      boards[i] = 0;
+    }
 	}
 }
 
-// TODO: Loop over all connected I2C actuators, sending a shutdown signal
+// Loop over all connected I2C actuators, sending a shutdown signal
 void softShutdown() {
-  
+  for (int i = 1 ; i < 128; i++) {
+    if (boards[i] == 'p') {
+			peltierSetIntensity(i, 0, 0, 0, 0, 0);
+		} else if (boards[i] == 'v') {
+      vibratorSetIntensity(i, 0, 0, 0);
+    }
+	}
 }
 
 // TODO: Cut power to I2C device power source
