@@ -57,8 +57,8 @@ void handleMessage() {
       byte intensity1 = controlMessage.substring(5,8).toInt();
       byte direction1 = controlMessage[8] - '0';
       byte intensity2 = controlMessage.substring(9,12).toInt();
-      byte direction2 = controlMessage[13] - '0';
-      long duration = controlMessage.substring(14).toInt();
+      byte direction2 = controlMessage[12] - '0';
+      long duration = controlMessage.substring(13).toInt();
       peltierSetIntensity(deviceAddress, intensity1, direction1, intensity2, direction2, duration);
       Serial.println("Code: 0");
     } else if (controlMessage[1] == '1') {
