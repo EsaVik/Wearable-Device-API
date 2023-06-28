@@ -115,7 +115,7 @@ void handleMessage() {
       // Write output to Serial - ts: timestamp, values: [value]
       Serial.print("ts:");
       Serial.print(millis());
-      Serial.print("values:[");
+      Serial.print(",values:[");
       for (int i = 0; i < 3; i++) {
         Serial.print(temperatures[i]);
         Serial.print(",");
