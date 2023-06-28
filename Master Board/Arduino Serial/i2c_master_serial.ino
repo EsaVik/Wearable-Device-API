@@ -30,7 +30,7 @@ void loop() {
     while (inByte != '\n') {
       if (Serial.available()) {
         controlMessage += inByte;
-				inByte = Serial.read();
+        inByte = Serial.read();
       }
     }
 
@@ -38,9 +38,9 @@ void loop() {
     handleMessage();
     controlMessage = "";
   }
-	
-	// Any required control functionality
-	
+  
+  // Any required control functionality
+  
 }
 
 // Serial API
@@ -141,27 +141,27 @@ void handleMessage() {
 // Retrieve list of connected I2C devices, along with type
 void getDevices() {
   for (int i = 1 ; i < 128; i++) {
-		Wire.beginTransmission(i);
-		byte error = Wire.endTransmission();
+    Wire.beginTransmission(i);
+    byte error = Wire.endTransmission();
  
     if (error == 0) {
-			// Store device address and type
+      // Store device address and type
       boards[i] = i2cGetType(i);
-		} else {
+    } else {
       boards[i] = 0;
     }
-	}
+  }
 }
 
 // Loop over all connected I2C actuators, sending a shutdown signal
 void softShutdown() {
   for (int i = 1 ; i < 128; i++) {
     if (boards[i] == 'p') {
-			peltierSetIntensity(i, 0, 0, 0, 0, 0);
-		} else if (boards[i] == 'v') {
+      peltierSetIntensity(i, 0, 0, 0, 0, 0);
+    } else if (boards[i] == 'v') {
       vibratorSetIntensity(i, 0, 0, 0);
     }
-	}
+  }
 }
 
 // TODO: Cut power to I2C device power source
@@ -187,11 +187,11 @@ void setVibrationMultiplier(float multiplier) {
 
 // Get Type | command
 char i2cGetType(byte address) {
-	Wire.beginTransmission(address);
+  Wire.beginTransmission(address);
   Wire.write(0);
-	Wire.endTransmission();
-	
-	Wire.requestFrom((int) address, 1);
+  Wire.endTransmission();
+  
+  Wire.requestFrom((int) address, 1);
   while (true) {
     if (Wire.available()) {
       return Wire.read();
@@ -209,17 +209,17 @@ void peltierSetIntensity(byte address, byte intensity1, byte direction1, byte in
   Wire.write(direction1);
   Wire.write(intensity2);
   Wire.write(direction2);
-	Wire.write((char*) &duration, 4);
+  Wire.write((char*) &duration, 4);
   Wire.endTransmission();
 }
 
 // Read Sensors | command
 void peltierReadSensors(byte address) {
-	Wire.beginTransmission(address);
+  Wire.beginTransmission(address);
   Wire.write(2);
-	Wire.endTransmission();
-	
-	Wire.requestFrom((int) address, 4);
+  Wire.endTransmission();
+  
+  Wire.requestFrom((int) address, 4);
   int i = 0;
   while (i < 4) {
     if (Wire.available()) {
@@ -237,7 +237,7 @@ void peltierSetMinimumMaximum(byte address, byte minimumTemperatureSide1, byte m
   Wire.write(maximumTemperatureSide1);
   Wire.write(minimumTemperatureSide2);
   Wire.write(maximumTemperatureSide2);
-	Wire.endTransmission();
+  Wire.endTransmission();
 }
 
 // Set Minimum and Maximum temperatures | command target1 target2 duration
@@ -246,8 +246,8 @@ void peltierSetTarget(byte address, byte temperatureTarget1, byte temperatureTar
   Wire.write(4);
   Wire.write(temperatureTarget1);
   Wire.write(temperatureTarget2);
-	Wire.write((char*) &duration, 4);
-	Wire.endTransmission();
+  Wire.write((char*) &duration, 4);
+  Wire.endTransmission();
 }
 
 // I2C Library for Vibrator Slave Board API
@@ -258,6 +258,6 @@ void vibratorSetIntensity(byte address, byte intensity1, byte intensity2, long d
   Wire.write(1);
   Wire.write(intensity1);
   Wire.write(intensity2);
-	Wire.write((char*) &duration, 4);
+  Wire.write((char*) &duration, 4);
   Wire.endTransmission();
 }
