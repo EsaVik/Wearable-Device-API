@@ -251,7 +251,7 @@ void calculateTemperatures() {
     // Calculate voltage over thermistor
     VT = VCC - VR;
     // Calculate resistance caused by temperature
-    RT = sensorReadings[i] / (VR / R);
+    RT = VT / (VR / R);
     // Calculate temperature in Kelvin based on the measurements
     ln = log(RT / RT0);
     TX = (1 / ((ln / B) + (1 / T0)));
