@@ -43,7 +43,10 @@ void loop() {
   
 }
 
-// Serial API
+// ############
+// #Serial API#
+// ############
+
 // Message format:
 // First byte - Device type
 // Second byte - Command type
@@ -140,7 +143,7 @@ void handleMessage() {
 
 // Retrieve list of connected I2C devices, along with type
 void getDevices() {
-  for (int i = 1 ; i < 128; i++) {
+  for (int i = 0; i < 128; i++) {
     Wire.beginTransmission(i);
     byte error = Wire.endTransmission();
  
@@ -155,7 +158,7 @@ void getDevices() {
 
 // Loop over all connected I2C actuators, sending a shutdown signal
 void softShutdown() {
-  for (int i = 1 ; i < 128; i++) {
+  for (int i = 0; i < 128; i++) {
     if (boards[i] == 'p') {
       peltierSetIntensity(i, 0, 0, 0, 0, 0);
     } else if (boards[i] == 'v') {
