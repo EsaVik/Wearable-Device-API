@@ -155,7 +155,7 @@ void loop() {
       analogWrite(p2Pin1, 0);
       analogWrite(p2Pin2, 0);
     } else {
-      analogWrite(p2Pin1, intensity1);
+      analogWrite(p2Pin1, intensity2);
       analogWrite(p2Pin2, 0);
     }
   // Cooling side 1, heating side 2
@@ -165,7 +165,7 @@ void loop() {
       analogWrite(p2Pin2, 0);
     } else {
       analogWrite(p2Pin1, 0);
-      analogWrite(p2Pin2, intensity1);
+      analogWrite(p2Pin2, intensity2);
     }
   }
   
@@ -199,8 +199,8 @@ void readEvent(int count) {
       // Read byte and move it to correct position
       temporaryVariable = (temporaryVariable | Wire.read()) << (8 * i);
       // Store byte in correct position in newDuration
-			newDuration = newDuration | temporaryVariable;
-		}
+      newDuration = newDuration | temporaryVariable;
+    }
     updateState = true;
   } else if (command == 2) {
     // No handling needed
@@ -219,8 +219,8 @@ void readEvent(int count) {
       // Read byte and move it to correct position
       temporaryVariable = (temporaryVariable | Wire.read()) << (8 * i);
       // Store byte in correct position in newDuration
-			newDuration = newDuration | temporaryVariable;
-		}
+      newDuration = newDuration | temporaryVariable;
+    }
     updateState = true;
   }
 }
