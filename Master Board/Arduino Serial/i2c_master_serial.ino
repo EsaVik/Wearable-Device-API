@@ -122,6 +122,19 @@ void handleMessage() {
       }
       Serial.print(temperatures[3]);
       Serial.println("]");
+    } else if (controlMessage[1] == '2') {
+      byte minimumTemperatureSide1 = controlMessage.substring(5,8).toInt();
+      byte maximumTemperatureSide1 = controlMessage.substring(8,11).toInt();
+      byte minimumTemperatureSide2 = controlMessage.substring(11,14).toInt();
+      byte maximumTemperatureSide2 = controlMessage.substring(14,17).toInt();
+      peltierSetMinimumMaximum(deviceAddress, minimumTemperatureSide1, maximumTemperatureSide1, minimumTemperatureSide2, maximumTemperatureSide2);
+      Serial.println("code: 0");
+    }  else if (controlMessage[1] == '3') {
+      byte temperatureTarget1 = controlMessage.substring(5,8).toInt();
+      byte temperatureTarget2 = controlMessage.substring(8,11).toInt();
+      long duration = controlMessage.substring(11).toInt();
+      peltierSetTarget(deviceAddress, temperatureTarget1, temperatureTarget2, duration);
+      Serial.println("code: 0");
     }
   // Vibrator Device API
   // Commands:
