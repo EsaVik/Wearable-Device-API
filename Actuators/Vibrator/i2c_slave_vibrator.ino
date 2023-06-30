@@ -89,7 +89,7 @@ void readEvent(int count) {
       temporaryVariable = (temporaryVariable | Wire.read()) << (8 * i);
       // Store byte in correct position in newDuration
       newDuration = newDuration | temporaryVariable;
-  }
+    }
     updateState = true;
   }
 }
