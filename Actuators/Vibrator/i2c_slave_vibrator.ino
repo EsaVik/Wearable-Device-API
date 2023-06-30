@@ -77,19 +77,19 @@ void readEvent(int count) {
   // 0 - Get Type
   // 1 - Set Intensity | intensity1 intensity2 duration
   if (command == 0) {
-		// No handling needed
+    // No handling needed
   } else if (command == 1) {
     newIntensity1 = Wire.read();
     newIntensity2 = Wire.read();
-	  newDuration = 0;
-	  // Store all 4 bytes of duration in a long int
+    newDuration = 0;
+    // Store all 4 bytes of duration in a long int
     for (int i = 0 ; i < 4 ; i++) {
       long temporaryVariable = 0;
       // Read byte and move it to correct position
       temporaryVariable = (temporaryVariable | Wire.read()) << (8 * i);
       // Store byte in correct position in newDuration
-			newDuration = newDuration | temporaryVariable;
-		}
+      newDuration = newDuration | temporaryVariable;
+  }
     updateState = true;
   }
 }
@@ -97,7 +97,7 @@ void readEvent(int count) {
 // Handles incoming requests
 // 0 - Get Type
 void sendEvent() {
-	if (command == 0) {
-		Wire.write(boardType);
-	}
+  if (command == 0) {
+    Wire.write(boardType);
+  }
 }
