@@ -2,9 +2,9 @@
 #include <WiFiNINA.h>
 
 // Network SSID (name)
-char ssid[] = "aalto open";
+char ssid[] = "NETGEAR36";
 // Network password
-char pass[] = "";
+char pass[] = "jollywater194";
 // Connection status
 int status = WL_IDLE_STATUS;
 // Server socket with port 80
@@ -44,18 +44,25 @@ void setup() {
   // Start socket
   server.begin();
   Serial.println("Successfully connected to WiFi");
+
+  // Print your board's IP address:
+  IPAddress ip = WiFi.localIP();
+  Serial.print("IP Address: ");
+  Serial.println(ip);
   
   // Initialize I2C communication with slave boards
   Wire.begin();
   // Scan for all devices
   getDevices();
+  Serial.println("Scanning done");
 }
 
 void loop() {
   client = server.available();
-  
+
   // If there is a client, process the request
   if (client) {
+    Serial.println("Client connected!");
     // Start a new loop for handling the connection
     while (client.connected()) {
       // Check for incoming control messages without interrupting control loop
@@ -76,6 +83,7 @@ void loop() {
   
       // Any required control functionality
     }
+    Serial.println("Client disconnected!");
   }
 }
 
