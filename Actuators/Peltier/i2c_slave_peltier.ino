@@ -119,11 +119,30 @@ void loop() {
   // If a temperatureTarget has been set for peltier, adjust pwm accordingly
   // Otherwise, peltier has been set for constant pwm, so let it continue
   if (temperatureTarget1 > 0) {
+    byte temperatureDifference = abs(temperatures[0] - temperatureTarget1);
+    if (temperatureDifference == 0) {
+      intensity1 = 50;
+    } else if (temperatureDifference == 1) {
+      intensity1 = 100;
+    } else if (temperatureDifference == 2) {
+      intensity1 = 150;
+    } else {
+      intensity1 = 255;
+    }
+    
+    temperatureDifference = abs(temperatures[2] - temperatureTarget2);
+    if (temperatureDifference == 0) {
+      intensity2 = 50;
+    } else if (temperatureDifference == 1) {
+      intensity2 = 100;
+    } else if (temperatureDifference == 2) {
+      intensity2 = 150;
+    } else {
+      intensity2 = 255;
+    }
     // If below set target, heat up, otherwise cool down
-    intensity1 = 255;
-    intensity2 = 255;
-    direction1 = temperatures[0] < temperatureTarget1;
-    direction2 = temperatures[2] < temperatureTarget2;
+    direction1 = temperatures[0] > temperatureTarget1;
+    direction2 = temperatures[2] > temperatureTarget2;
   }
   
   // Peltier1
