@@ -20,7 +20,7 @@ byte t4Pin = 9; //thermistor 3 (S4)
 
 // Variables for reading control messages
 // For concurrency reasons, some are duplicates of program state
-byte command; // 0-3
+byte command; // 0-4
 byte newIntensity1 = 0; // 0-255
 byte newIntensity2 = 0; // 0-255
 byte newDirection1 = 0; // 0 (heating) or 1 (cooling)
@@ -213,8 +213,8 @@ void readEvent(int count) {
   // 0 - Get Type
   // 1 - Set Intensity | intensity1 direction1 intensity2 direction2 duration
   // 2 - Read Sensors
-  // 2 - Set Minimum and Maximum temperatures | minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
-  // 3 - Set Temperature Targets | temperatureTarget1 temperatureTarget2 duration
+  // 3 - Set Minimum and Maximum temperatures | minimumTemperatureSide1 maximumTemperatureSide1 minimumTemperatureSide2 maximumTemperatureSide2
+  // 4 - Set Temperature Targets | temperatureTarget1 temperatureTarget2 duration
   if (command == 0) {
     // No handling needed
   } else if (command == 1) {
