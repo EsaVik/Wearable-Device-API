@@ -28,8 +28,7 @@ bool updateState = false;
 byte intensity1 = 0; // 0-255
 byte intensity2 = 0; // 0-255
 long duration = 0;
-byte maximumTemperature1 = 45; // 0-100
-byte maximumTemperature2 = 45; // 0-100
+byte maximumTemperature = 45; // 0-100
 byte temperatureTarget1 = 0;
 byte temperatureTarget2 = 0;
 
@@ -134,7 +133,7 @@ void loop() {
   
   // Heater1
   // If overheating, shut down pwm
-  if (temperatures[0] > maximumTemperature1) {
+  if (temperatures[0] > maximumTemperature) {
     analogWrite(h1Pin, 0);
   } else {
     analogWrite(h1Pin, intensity1);
@@ -142,7 +141,7 @@ void loop() {
   
   // Heater2
   // If overheating, shut down pwm
-  if (temperatures[1] > maximumTemperature2) {
+  if (temperatures[1] > maximumTemperature) {
     analogWrite(h2Pin, 0);
   } else {
     analogWrite(h2Pin, intensity2);
@@ -162,7 +161,7 @@ void readEvent(int count) {
   // 0 - Get Type
   // 1 - Set Intensity | intensity1 intensity2 duration
   // 2 - Read Sensors
-  // 3 - Set Maximum temperatures | maximumTemperature1 maximumTemperature2
+  // 3 - Set Maximum temperature | maximumTemperature
   // 4 - Set Temperature Targets | temperatureTarget1 temperatureTarget2 duration
   if (command == 0) {
     // No handling needed
@@ -182,8 +181,7 @@ void readEvent(int count) {
   } else if (command == 2) {
     // No handling needed
   } else if (command == 3) {
-    maximumTemperature1 = Wire.read();
-    maximumTemperature2 = Wire.read();
+    maximumTemperature = Wire.read();
   } else if (command == 4) {
     newTemperatureTarget1 = Wire.read();
     newTemperatureTarget2 = Wire.read();
