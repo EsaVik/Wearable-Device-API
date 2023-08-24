@@ -193,6 +193,62 @@ void handleMessage() {
       vibratorSetIntensity(deviceAddress, intensity1, intensity2, duration);
       client.println("code: 0");
     }
+  // Temperature Sensor API
+  // Commands:
+  // 0 - Read Sensor | address
+  } else if (controlMessage[0] == 't') {
+    // Convert ASCII to 3 digit number
+    byte deviceAddress = controlMessage.substring(2,5).toInt();
+    if (controlMessage[1] == '0') {
+      thermistorReadSensors(deviceAddress);
+      // Write output to socket - ts: timestamp, values: [value]
+      client.print("ts:");
+      client.print(millis());
+      client.print(",values:[");
+      for (int i = 0; i < 2; i++) {
+        client.print(temperatures[i]);
+        client.print(",");
+      }
+      client.print(temperatures[2]);
+      client.println("]");
+    }
+  // Heater Device API
+  // Commands:
+  // 0 - Set Intensity | address intensity1 intensity2 duration
+  // 1 - Read Sensors | address
+  // 2 - Set Maximum temperature | address maximumTemperature
+  // 3 - Set Target Temperature | address target1 target2 duration
+  } else if (controlMessage[0] == 'h') {
+    // Convert ASCII to 3 digit number
+    byte deviceAddress = controlMessage.substring(2,5).toInt();
+    if (controlMessage[1] == '0') {
+      byte intensity1 = controlMessage.substring(5,8).toInt();
+      byte intensity2 = controlMessage.substring(8,11).toInt();
+      long duration = controlMessage.substring(11).toInt();
+      heaterSetIntensity(deviceAddress, intensity1, intensity2, duration);
+      client.println("code: 0");
+    } else if (controlMessage[1] == '1') {
+      // Read sensors
+      heaterReadSensors(deviceAddress);
+      // Write output to socket - ts: timestamp, values: [value]
+      client.print("ts:");
+      client.print(millis());
+      client.print(",values:[");
+      client.print(temperatures[0]);
+      client.print(",");
+      client.print(temperatures[1]);
+      client.println("]");
+    } else if (controlMessage[1] == '2') {
+      byte maximumTemperature = controlMessage.substring(5,8).toInt();
+      heaterSetMaximum(deviceAddress, maximumTemperature);
+      client.println("code: 0");
+    }  else if (controlMessage[1] == '3') {
+      byte temperatureTarget1 = controlMessage.substring(5,8).toInt();
+      byte temperatureTarget2 = controlMessage.substring(8,11).toInt();
+      long duration = controlMessage.substring(11).toInt();
+      heaterSetTarget(deviceAddress, temperatureTarget1, temperatureTarget2, duration);
+      client.println("code: 0");
+    }
   }
 }
 
@@ -351,7 +407,7 @@ void heaterReadSensors(byte address) {
 }
 
 // Set Maximum temperature | command maximumTemperatureSide
-void peltierSetMinimumMaximum(byte address, byte maximumTemperature) {
+void heaterSetMaximum(byte address, byte maximumTemperature) {
   Wire.beginTransmission(address);
   Wire.write(3);
   Wire.write(maximumTemperature);
@@ -359,7 +415,7 @@ void peltierSetMinimumMaximum(byte address, byte maximumTemperature) {
 }
 
 // Set target temperatures | command target1 target2 duration
-void peltierSetTarget(byte address, byte temperatureTarget1, byte temperatureTarget2, long duration) {
+void heaterSetTarget(byte address, byte temperatureTarget1, byte temperatureTarget2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(4);
   Wire.write(temperatureTarget1);
