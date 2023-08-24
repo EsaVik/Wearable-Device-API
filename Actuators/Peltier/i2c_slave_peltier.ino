@@ -101,6 +101,14 @@ void loop() {
     temperatureTarget2 = newTemperatureTarget2;
     direction1 = newDirection1;
     direction2 = newDirection2;
+    
+    newDuration = 0;
+    newIntensity1 = 0;
+    newIntensity2 = 0;
+    newTemperatureTarget1 = 0;
+    newTemperatureTarget2 = 0;
+    newDirection1 = 0;
+    newDirection2 = 0;
     updateState = false;
   }
 
@@ -129,8 +137,12 @@ void loop() {
     } else {
       intensity1 = 255;
     }
+    // If below set target, heat up, otherwise cool down
+    direction1 = temperatures[0] > temperatureTarget1;
+  }
     
-    temperatureDifference = abs(temperatures[2] - temperatureTarget2);
+  if (temperatureTarget2 > 0) {
+    byte temperatureDifference = abs(temperatures[2] - temperatureTarget2);
     if (temperatureDifference == 0) {
       intensity2 = 50;
     } else if (temperatureDifference == 1) {
@@ -141,7 +153,6 @@ void loop() {
       intensity2 = 255;
     }
     // If below set target, heat up, otherwise cool down
-    direction1 = temperatures[0] > temperatureTarget1;
     direction2 = temperatures[2] > temperatureTarget2;
   }
   
