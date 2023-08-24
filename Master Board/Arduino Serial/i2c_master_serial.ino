@@ -277,3 +277,67 @@ void vibratorSetIntensity(byte address, byte intensity1, byte intensity2, long d
   Wire.write((char*) &duration, 4);
   Wire.endTransmission();
 }
+
+// I2C Library for Heater Slave Board API
+
+// Set Intensity | command intensity1 intensity2 duration
+void heaterSetIntensity(byte address, byte intensity1, byte intensity2, long duration) {
+  Wire.beginTransmission(address);
+  Wire.write(1);
+  Wire.write(intensity1);
+  Wire.write(intensity2);
+  Wire.write((char*) &duration, 4);
+  Wire.endTransmission();
+}
+
+// Read Sensors | command
+void heaterReadSensors(byte address) {
+  Wire.beginTransmission(address);
+  Wire.write(2);
+  Wire.endTransmission();
+  
+  Wire.requestFrom((int) address, 2);
+  int i = 0;
+  while (i < 2) {
+    if (Wire.available()) {
+      temperatures[i] = Wire.read();
+      i++;
+    }
+  }
+}
+
+// Set Maximum temperature | command maximumTemperatureSide
+void peltierSetMinimumMaximum(byte address, byte maximumTemperature) {
+  Wire.beginTransmission(address);
+  Wire.write(3);
+  Wire.write(maximumTemperature);
+  Wire.endTransmission();
+}
+
+// Set target temperatures | command target1 target2 duration
+void peltierSetTarget(byte address, byte temperatureTarget1, byte temperatureTarget2, long duration) {
+  Wire.beginTransmission(address);
+  Wire.write(4);
+  Wire.write(temperatureTarget1);
+  Wire.write(temperatureTarget2);
+  Wire.write((char*) &duration, 4);
+  Wire.endTransmission();
+}
+
+// I2C Library for Thermistor Slave Board API
+
+// Read Sensors | command
+void thermistorReadSensors(byte address) {
+  Wire.beginTransmission(address);
+  Wire.write(1);
+  Wire.endTransmission();
+  
+  Wire.requestFrom((int) address, 3);
+  int i = 0;
+  while (i < 3) {
+    if (Wire.available()) {
+      temperatures[i] = Wire.read();
+      i++;
+    }
+  }
+}
