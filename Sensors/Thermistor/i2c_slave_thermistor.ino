@@ -17,7 +17,7 @@ byte command; // 0-3
 // For storing temperature values
 // [ thermistor1, thermistor2, thermistor3 ]
 int sensorReadings[3];
-byte temperatures[3];
+float temperatures[3];
 
 // For calculating temperature
 // Thermistor properties
@@ -75,7 +75,7 @@ void sendEvent() {
     Wire.write(boardType);
   } else if (command == 1) {
     // Convert temperatures to char array for easy writing
-    Wire.write((char*) temperatures, 3);
+    Wire.write((char*) temperatures, 12);
   }
 }
 

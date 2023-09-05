@@ -50,7 +50,7 @@ unsigned long previousTime = 0;
 // For storing temperature values
 // [ Peltier1_Side1, Peltier1_Side2, Peltier2_Side1, Peltier2_Side2 ]
 int sensorReadings[4];
-byte temperatures[4];
+float temperatures[4];
 
 // For calculating temperature
 // Thermistor properties
@@ -263,7 +263,7 @@ void sendEvent() {
     Wire.write(boardType);
   } else if (command == 2) {
     // Convert temperatures to char array for easy writing
-    Wire.write((char*) temperatures, 4);
+    Wire.write((char*) temperatures, 16);
   }
 }
 

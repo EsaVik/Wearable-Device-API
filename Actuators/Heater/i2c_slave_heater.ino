@@ -39,7 +39,7 @@ unsigned long previousTime = 0;
 // For storing temperature values
 // [ heater1, heater2 ]
 int sensorReadings[2];
-byte temperatures[2];
+float temperatures[2];
 
 // For calculating temperature
 // Thermistor properties
@@ -206,7 +206,7 @@ void sendEvent() {
     Wire.write(boardType);
   } else if (command == 2) {
     // Convert temperatures to char array for easy writing
-    Wire.write((char*) temperatures, 2);
+    Wire.write((char*) temperatures, 8);
   }
 }
 

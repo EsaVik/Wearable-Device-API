@@ -18,7 +18,7 @@ WiFiClient client = server.available();
 String controlMessage;
 
 // For temporarily storing temperature information retrieved from a slave board
-byte temperatures[4];
+float temperatures[4];
 
 // For storing all connected boards
 char boards[128] = {0};
@@ -357,13 +357,25 @@ void peltierReadSensors(byte address) {
   Wire.write(2);
   Wire.endTransmission();
   
-  Wire.requestFrom((int) address, 4);
+  Wire.requestFrom((int) address, 16);
   int i = 0;
   while (i < 4) {
-    if (Wire.available()) {
-      temperatures[i] = Wire.read();
-      i++;
+    temperatures[i] = 0;
+    int j = 0;
+    // Get all 4 bytes of a temperature
+    long temperature = 0;
+    while (j < 4) {
+      if (Wire.available()) {
+        long temporaryVariable = 0;
+        // Read byte and move it to correct position
+        temporaryVariable = (temporaryVariable | Wire.read()) << (8 * j);
+        // Store byte in correct position in temperature
+        temperature = (temperature | temporaryVariable);
+        j++;
+      }
     }
+    temperatures[i] = *(float*) &temperature;
+    i++;
   }
 }
 
@@ -418,13 +430,25 @@ void heaterReadSensors(byte address) {
   Wire.write(2);
   Wire.endTransmission();
   
-  Wire.requestFrom((int) address, 2);
+  Wire.requestFrom((int) address, 8);
   int i = 0;
   while (i < 2) {
-    if (Wire.available()) {
-      temperatures[i] = Wire.read();
-      i++;
+    temperatures[i] = 0;
+    int j = 0;
+    // Get all 4 bytes of a temperature
+    long temperature = 0;
+    while (j < 4) {
+      if (Wire.available()) {
+        long temporaryVariable = 0;
+        // Read byte and move it to correct position
+        temporaryVariable = (temporaryVariable | Wire.read()) << (8 * j);
+        // Store byte in correct position in temperature
+        temperature = (temperature | temporaryVariable);
+        j++;
+      }
     }
+    temperatures[i] = *(float*) &temperature;
+    i++;
   }
 }
 
@@ -454,13 +478,25 @@ void thermistorReadSensors(byte address) {
   Wire.write(1);
   Wire.endTransmission();
 
-  Wire.requestFrom((int) address, 3);
+  Wire.requestFrom((int) address, 12);
   int i = 0;
   while (i < 3) {
-    if (Wire.available()) {
-      temperatures[i] = Wire.read();
-      i++;
+    temperatures[i] = 0;
+    int j = 0;
+    // Get all 4 bytes of a temperature
+    long temperature = 0;
+    while (j < 4) {
+      if (Wire.available()) {
+        long temporaryVariable = 0;
+        // Read byte and move it to correct position
+        temporaryVariable = (temporaryVariable | Wire.read()) << (8 * j);
+        // Store byte in correct position in temperature
+        temperature = (temperature | temporaryVariable);
+        j++;
+      }
     }
+    temperatures[i] = *(float*) &temperature;
+    i++;
   }
 }
 
