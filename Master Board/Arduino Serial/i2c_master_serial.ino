@@ -277,9 +277,9 @@ char i2cGetType(byte address) {
 void peltierSetIntensity(byte address, byte intensity1, byte direction1, byte intensity2, byte direction2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(1);
-  Wire.write(intensity1);
+  Wire.write(intensity1 * temperatureMultiplier);
   Wire.write(direction1);
-  Wire.write(intensity2);
+  Wire.write(intensity2 * temperatureMultiplier);
   Wire.write(direction2);
   Wire.write((char*) &duration, 4);
   Wire.endTransmission();
@@ -312,7 +312,7 @@ void peltierSetMinimumMaximum(byte address, byte minimumTemperatureSide1, byte m
   Wire.endTransmission();
 }
 
-// Set Minimum and Maximum temperatures | command target1 target2 duration
+// Set target temperatures | command target1 target2 duration
 void peltierSetTarget(byte address, byte temperatureTarget1, byte temperatureTarget2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(4);
@@ -328,8 +328,8 @@ void peltierSetTarget(byte address, byte temperatureTarget1, byte temperatureTar
 void vibratorSetIntensity(byte address, byte intensity1, byte intensity2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(1);
-  Wire.write(intensity1);
-  Wire.write(intensity2);
+  Wire.write(intensity1 * vibrationMultiplier);
+  Wire.write(intensity2 * vibrationMultiplier);
   Wire.write((char*) &duration, 4);
   Wire.endTransmission();
 }
@@ -340,8 +340,8 @@ void vibratorSetIntensity(byte address, byte intensity1, byte intensity2, long d
 void heaterSetIntensity(byte address, byte intensity1, byte intensity2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(1);
-  Wire.write(intensity1);
-  Wire.write(intensity2);
+  Wire.write(intensity1 * temperatureMultiplier);
+  Wire.write(intensity2 * temperatureMultiplier);
   Wire.write((char*) &duration, 4);
   Wire.endTransmission();
 }
