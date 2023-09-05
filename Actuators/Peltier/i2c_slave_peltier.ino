@@ -38,8 +38,8 @@ byte direction2 = 0; // 0 (heating) or 1 (cooling)
 long duration = 0;
 byte maximumTemperatureSide1 = 45; // 0-100
 byte maximumTemperatureSide2 = 45; // 0-100
-byte minimumTemperatureSide1 = 45; // 0-100
-byte minimumTemperatureSide2 = 45; // 0-100
+byte minimumTemperatureSide1 = 0; // 0-100
+byte minimumTemperatureSide2 = 0; // 0-100
 byte temperatureTarget1 = 0;
 byte temperatureTarget2 = 0;
 
