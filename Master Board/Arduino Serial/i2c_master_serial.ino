@@ -241,12 +241,12 @@ void hardShutdown() {
   
 }
 
-// TODO: Multiply all temperature intensity values with this multiplier
+// Multiply all temperature intensity values with this multiplier
 void setTemperatureMultiplier(float multiplier) {
   temperatureMultiplier = multiplier;
 }
 
-// TODO: Multiply all vibration intensity values with this multiplier
+// Multiply all vibration intensity values with this multiplier
 void setVibrationMultiplier(float multiplier) {
   vibrationMultiplier = multiplier;
 }
