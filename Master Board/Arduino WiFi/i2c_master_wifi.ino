@@ -1,5 +1,6 @@
 #include <Wire.h>
 #include <WiFiNINA.h>
+#include "ECG_GSR.h"
 
 // Network SSID (name)
 char ssid[] = "NETGEAR36";
