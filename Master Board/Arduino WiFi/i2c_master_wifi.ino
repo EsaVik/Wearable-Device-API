@@ -26,6 +26,9 @@ char boards[128] = {0};
 float temperatureMultiplier = 1;
 float vibrationMultiplier = 1;
 
+// Set to true, if GSR sensor is used
+bool gsrEnabled = true;
+
 void setup() {
   // Initialize serial communication for printing information
   Serial.begin(9600);
@@ -54,7 +57,10 @@ void setup() {
   Wire.begin();
   // Scan for all devices
   getDevices();
-  Serial.println("Scanning done");
+  
+  if (gsrEnabled) {
+    initializeGSR();
+  }
 }
 
 void loop() {
@@ -249,6 +255,17 @@ void handleMessage() {
       heaterSetTarget(deviceAddress, temperatureTarget1, temperatureTarget2, duration);
       client.println("code: 0");
     }
+  // GSR Sensor API
+  // Commands:
+  // 0 - Read Sensor
+  } else if (controlMessage[0] == 'G') {
+    if (controlMessage[1] == '0') {
+      uint16_t gsrReading = readGSR();
+      client.print("ts:");
+      client.print(millis());
+      client.print(",value:");
+      client.println(gsrReading);
+    }
   }
 }
 
@@ -262,7 +279,11 @@ void getDevices() {
  
     if (error == 0) {
       // Store device address and type
-      boards[i] = i2cGetType(i);
+      if (gsrEnabled && ((i == 48) || (i == 96) || (i == 107))) {
+        boards[i] = 'G';
+      } else {
+        boards[i] = i2cGetType(i);
+      }
     } else {
       boards[i] = 0;
     }
@@ -321,9 +342,9 @@ char i2cGetType(byte address) {
 void peltierSetIntensity(byte address, byte intensity1, byte direction1, byte intensity2, byte direction2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(1);
-  Wire.write(intensity1 * temperatureMultiplier);
+  Wire.write((int) (intensity1 * temperatureMultiplier));
   Wire.write(direction1);
-  Wire.write(intensity2 * temperatureMultiplier);
+  Wire.write((int) (intensity2 * temperatureMultiplier));
   Wire.write(direction2);
   Wire.write((char*) &duration, 4);
   Wire.endTransmission();
@@ -372,8 +393,8 @@ void peltierSetTarget(byte address, byte temperatureTarget1, byte temperatureTar
 void vibratorSetIntensity(byte address, byte intensity1, byte intensity2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(1);
-  Wire.write(intensity1 * vibrationMultiplier);
-  Wire.write(intensity2 * vibrationMultiplier);
+  Wire.write((int) (intensity1 * vibrationMultiplier));
+  Wire.write((int) (intensity2 * vibrationMultiplier));
   Wire.write((char*) &duration, 4);
   Wire.endTransmission();
 }
@@ -384,8 +405,8 @@ void vibratorSetIntensity(byte address, byte intensity1, byte intensity2, long d
 void heaterSetIntensity(byte address, byte intensity1, byte intensity2, long duration) {
   Wire.beginTransmission(address);
   Wire.write(1);
-  Wire.write(intensity1 * temperatureMultiplier);
-  Wire.write(intensity2 * temperatureMultiplier);
+  Wire.write((int) (intensity1 * temperatureMultiplier));
+  Wire.write((int) (intensity2 * temperatureMultiplier));
   Wire.write((char*) &duration, 4);
   Wire.endTransmission();
 }
@@ -431,7 +452,7 @@ void thermistorReadSensors(byte address) {
   Wire.beginTransmission(address);
   Wire.write(1);
   Wire.endTransmission();
-  
+
   Wire.requestFrom((int) address, 3);
   int i = 0;
   while (i < 3) {
@@ -440,4 +461,87 @@ void thermistorReadSensors(byte address) {
       i++;
     }
   }
+}
+
+// I2C Library for GSR Board
+
+// Support function for writing to a GSR sensor register
+uint8_t gsrWriteRegisterByte (uint8_t deviceAddress, uint8_t registerAddress, uint8_t newRegisterByte) {
+  uint8_t result;
+  Wire.beginTransmission(deviceAddress);
+  Wire.write(registerAddress);
+  Wire.write(newRegisterByte);
+  result = Wire.endTransmission();
+
+  delay(5);
+  if(result > 0) {
+    Serial.print("FAIL in I2C register write! Error code: ");
+    Serial.println(result);
+  }
+
+  return result;
+}
+
+// Support function for reading from a GSR sensor register
+uint8_t gsrReadRegisterByte (uint8_t deviceAddress, uint8_t registerAddress) {
+  uint8_t registerData;
+  Wire.beginTransmission(deviceAddress);
+  Wire.write(registerAddress);
+  Wire.endTransmission();   
+  Wire.requestFrom(deviceAddress,  (byte)1);
+  registerData = Wire.read(); 
+  
+  return registerData;
+}
+
+// Initialize the GSR sensor to be ready for measurements
+void initializeGSR() {
+  // GPIO_A register. Set GPIO1 as analog.
+    gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_GPIO_A_REG, ECG_GSR_ENABLE_GPIO1_ANALOG);
+
+    // GPIO_E register. Set GPIO2 as output.
+    gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_GPIO_E_REG, 0x04);
+
+    // GPIO_O register. Enable GPIO2 output.
+    gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_GPIO_O_REG, 0x04);
+
+    // GPIO_SR register. Set increased slew rate for GPIO1.
+    gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_GPIO_SR_REG, ECG_GSR_SET_SLEW_RATE_GPIO1);
+
+     // EAF_CFG register. Enable EAF bias and Gain Stage.
+    gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_EAF_CFG_REG, ECG_GSR_ENABLE_BIAS_AND_GAIN);
+
+    // EAF_GST register. Input selection, reference voltage, Gain. 0x40 -> 0x46 set gain to 1,2,4,8,16,32,64 respectively
+    gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_EAF_GST_REG, 0x40);
+
+    // EAF_BIAS register. Resistive biasing for GPIO1. Bits 5:7. 0: off, 1-4: GPIO0-3, 5: ECG_REF
+    gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_EAF_BIAS_REG, ECG_GSR_SET_RES_BIAS_GPIO1);
+
+    // MAN_SEQ_CFG register. Start Sequencer.
+    gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_MAN_SEQ_CFG_REG, ECG_GSR_START_SEQUENCER);
+
+    // ADC_CFGB register. Enable ADC.
+    gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_ADC_CFGB_REG, ECG_GSR_ENABLE_ADC);
+
+    // ADC_CHANNEL_MASK_L register. Select Electrical Front End.
+    gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_ADC_CHANNEL_MASK_L_REG, ECG_GSR_SELECT_EFE);
+}
+
+// Read GSR value from sensor
+uint16_t readGSR(void) {
+  uint8_t ADC_LOW_BYTE, ADC_HIGH_BYTE;
+  uint16_t PPG_RESULT;
+
+  // SEQ_START register. Start one ADC conversion.
+  gsrWriteRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_SEQ_START_REG, ECG_GSR_START_ADC_CONVERSION);
+
+  // Read lower 8 bits of raw ADC data.
+  ADC_LOW_BYTE = gsrReadRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_ADC_DATA_L_REG);
+
+  // Read higher 8 bits of raw ADC data.
+  ADC_HIGH_BYTE = gsrReadRegisterByte(ECG_GSR_SLAVE_ADDRESS, ECG_GSR_ADC_DATA_H_REG);
+
+  // Raw ADC result
+  PPG_RESULT = (uint16_t) ADC_LOW_BYTE + ( (uint16_t) ADC_HIGH_BYTE << 8);
+  return PPG_RESULT;
 }

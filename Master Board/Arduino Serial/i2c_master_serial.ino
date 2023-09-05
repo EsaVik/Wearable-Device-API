@@ -217,7 +217,6 @@ void handleMessage() {
   // Commands:
   // 0 - Read Sensor
   } else if (controlMessage[0] == 'G') {
-    // Convert ASCII to 3 digit number
     if (controlMessage[1] == '0') {
       uint16_t gsrReading = readGSR();
       Serial.print("ts:");
