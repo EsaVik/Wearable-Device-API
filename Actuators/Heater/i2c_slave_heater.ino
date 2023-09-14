@@ -7,12 +7,12 @@ char boardType = 'h';
 byte slaveAddress = 2;
 
 // Output pins for controlling peltier elements
-byte h1Pin = 0; //heater 1
-byte h2Pin = 1; //heater 2
+byte h1Pin = 1; //heater 1
+byte h2Pin = 4; //heater 2
 
 // Input pins for thermistors
-byte t1Pin = 2; //thermistor 1
-byte t2Pin = 3; //thermistor 2
+byte t1Pin = 0; //thermistor 1
+byte t2Pin = 5; //thermistor 2
 
 // Variables for reading control messages
 // For concurrency reasons, some are duplicates of program state
@@ -48,7 +48,8 @@ float temperatures[2];
 // B: 3977 K +- 0.75%
 
 float VCC = 5.00; // Supply voltage
-int R = 10000; // R = 10KΩ
+int R1 = 10000; // R1 = 10KΩ
+int R2 = 7778; // R1 parallel with the internal pull-up resistor which is 35KΩ
 int RT0 = 10000; // RT0 = 10KΩ
 int B = 3977; // B = 3977
 float T0 = 298.15; // T0 in Kelvin
@@ -206,7 +207,7 @@ void sendEvent() {
     Wire.write(boardType);
   } else if (command == 2) {
     // Convert temperatures to char array for easy writing
-    Wire.write((char*) temperatures, 8);
+    Wire.write((char*) temperatures, 2);
   }
 }
 
@@ -218,9 +219,17 @@ void calculateTemperatures() {
   for (int i = 0; i < 2; i++) {
     // Calculate voltage over 10k resistor
     // Supply voltage is 5V and ADC has values between 0-1023
-    VR = (VCC / 1023.00) * sensorReadings[i];
-    // Calculate voltage over thermistor
-    VT = VCC - VR;
+    int R;
+    if (i == 0) {
+      R = R1;
+    } 
+    else { // Different resistence from UPDI pin (pin5)
+      R = R2;
+    }
+
+    VT = (VCC / 1023.00) * sensorReadings[i];
+    // Calculate voltage over resistor
+    VR = VCC - VT;
     // Calculate resistance caused by temperature
     RT = VT / (VR / R);
     // Calculate temperature in Kelvin based on the measurements
