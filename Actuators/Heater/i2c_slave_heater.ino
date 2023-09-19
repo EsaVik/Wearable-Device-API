@@ -48,8 +48,7 @@ float temperatures[2];
 // B: 3977 K +- 0.75%
 
 float VCC = 5.00; // Supply voltage
-int R1 = 10000; // R1 = 10KΩ
-int R2 = 7778; // R1 parallel with the internal pull-up resistor which is 35KΩ
+int R[2] = {10000, 7778}; // R1 = 10KΩ, R2 has a 35KΩ resistor in parallel
 int RT0 = 10000; // RT0 = 10KΩ
 int B = 3977; // B = 3977
 float T0 = 298.15; // T0 in Kelvin
@@ -207,7 +206,7 @@ void sendEvent() {
     Wire.write(boardType);
   } else if (command == 2) {
     // Convert temperatures to char array for easy writing
-    Wire.write((char*) temperatures, 2);
+    Wire.write((char*) temperatures, 8);
   }
 }
 
@@ -219,19 +218,11 @@ void calculateTemperatures() {
   for (int i = 0; i < 2; i++) {
     // Calculate voltage over 10k resistor
     // Supply voltage is 5V and ADC has values between 0-1023
-    int R;
-    if (i == 0) {
-      R = R1;
-    } 
-    else { // Different resistence from UPDI pin (pin5)
-      R = R2;
-    }
-
     VT = (VCC / 1023.00) * sensorReadings[i];
     // Calculate voltage over resistor
     VR = VCC - VT;
     // Calculate resistance caused by temperature
-    RT = VT / (VR / R);
+    RT = VT / (VR / R[i]);
     // Calculate temperature in Kelvin based on the measurements
     ln = log(RT / RT0);
     TX = (1 / ((ln / B) + (1 / T0)));
