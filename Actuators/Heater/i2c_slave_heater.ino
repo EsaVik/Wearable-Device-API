@@ -6,7 +6,7 @@ char boardType = 'h';
 // I2C address for the board (1-127)
 byte slaveAddress = 2;
 
-// Output pins for controlling peltier elements
+// Output pins for controlling heater elements
 byte h1Pin = 1; //heater 1
 byte h2Pin = 4; //heater 2
 
@@ -39,7 +39,7 @@ unsigned long previousTime = 0;
 // For storing temperature values
 // [ heater1, heater2 ]
 int sensorReadings[2];
-float temperatures[2];
+byte temperatures[2];
 
 // For calculating temperature
 // Thermistor properties
@@ -53,8 +53,6 @@ int RT0 = 10000; // RT0 = 10KΩ
 int B = 3977; // B = 3977
 float T0 = 298.15; // T0 in Kelvin
 float VR, VT, RT, ln, TX;
-
-
 
 void setup() {
   
@@ -206,7 +204,7 @@ void sendEvent() {
     Wire.write(boardType);
   } else if (command == 2) {
     // Convert temperatures to char array for easy writing
-    Wire.write((char*) temperatures, 8);
+    Wire.write((char*) temperatures, 2);
   }
 }
 
@@ -216,7 +214,7 @@ void calculateTemperatures() {
   sensorReadings[1] = analogRead(t2Pin);
   
   for (int i = 0; i < 2; i++) {
-    // Calculate voltage over 10k resistor
+    // Calculate voltage over thermistor
     // Supply voltage is 5V and ADC has values between 0-1023
     VT = (VCC / 1023.00) * sensorReadings[i];
     // Calculate voltage over resistor
