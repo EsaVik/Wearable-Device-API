@@ -255,6 +255,8 @@ void softShutdown() {
       peltierSetIntensity(i, 0, 0, 0, 0, 0);
     } else if (boards[i] == 'v') {
       vibratorSetIntensity(i, 0, 0, 0);
+    } else if (boards[i] == 'h') {
+      heaterSetIntensity(i, 0, 0, 0);
     }
   }
 }
