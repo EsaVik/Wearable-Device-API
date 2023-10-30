@@ -392,10 +392,22 @@ void heaterReadSensors(byte address) {
   Wire.requestFrom((int) address, 8);
   int i = 0;
   while (i < 2) {
-    if (Wire.available()) {
-      temperatures[i] = Wire.read();
-      i++;
+    temperatures[i] = 0;
+    int j = 0;
+    // Get all 4 bytes of a temperature
+    long temperature = 0;
+    while (j < 4) {
+      if (Wire.available()) {
+        long temporaryVariable = 0;
+        // Read byte and move it to correct position
+        temporaryVariable = (temporaryVariable | Wire.read()) << (8 * j);
+        // Store byte in correct position in temperature
+        temperature = (temperature | temporaryVariable);
+        j++;
+      }
     }
+    temperatures[i] = *(float*) &temperature;
+    i++;
   }
 }
 

@@ -8,11 +8,11 @@ byte slaveAddress = 2;
 
 // Output pins for controlling heater elements
 byte h1Pin = 1; //heater 1
-byte h2Pin = 10; //heater 2
+byte h2Pin = 4; //heater 2
 
 // Input pins for thermistors
-byte t1Pin = 3; //thermistor 1
-byte t2Pin = 8; //thermistor 2
+byte t1Pin = 0; //thermistor 1
+byte t2Pin = 5; //thermistor 2
 
 // Variables for reading control messages
 // For concurrency reasons, some are duplicates of program state
@@ -39,7 +39,7 @@ unsigned long previousTime = 0;
 // For storing temperature values
 // [ heater1, heater2 ]
 int sensorReadings[2];
-float temperatures[2];
+byte temperatures[2];
 
 // For calculating temperature
 // Thermistor properties
@@ -48,18 +48,18 @@ float temperatures[2];
 // B: 3977 K +- 0.75%
 
 float VCC = 5.00; // Supply voltage
-int R = 10000; // R = 10KΩ
+int R[2] = {10000, 7778}; // R1 = 10KΩ, R2 has a 35KΩ resistor in parallel
 int RT0 = 10000; // RT0 = 10KΩ
 int B = 3977; // B = 3977
 float T0 = 298.15; // T0 in Kelvin
 float VR, VT, RT, ln, TX;
 
 void setup() {
-
+  
   // Initialize input and output pins
   pinMode(h1Pin, OUTPUT);
   pinMode(h2Pin, OUTPUT);;
-
+  
   pinMode(t1Pin, INPUT);
   pinMode(t2Pin, INPUT);
 
@@ -82,7 +82,7 @@ void loop() {
     intensity2 = newIntensity2;
     temperatureTarget1 = newTemperatureTarget1;
     temperatureTarget2 = newTemperatureTarget2;
-
+    
     newDuration = 0;
     newIntensity1 = 0;
     newIntensity2 = 0;
@@ -116,7 +116,7 @@ void loop() {
     } else {
       intensity1 = 0;
     }
-
+    
     temperatureDifference = temperatureTarget2 - temperatures[1];
     if (temperatureDifference > 2) {
       intensity2 = 255;
@@ -128,7 +128,7 @@ void loop() {
       intensity2 = 0;
     }
   }
-
+  
   // Heater1
   // If overheating, shut down pwm
   if (temperatures[0] > maximumTemperature) {
@@ -136,7 +136,7 @@ void loop() {
   } else {
     analogWrite(h1Pin, intensity1);
   }
-
+  
   // Heater2
   // If overheating, shut down pwm
   if (temperatures[1] > maximumTemperature) {
@@ -144,7 +144,7 @@ void loop() {
   } else {
     analogWrite(h2Pin, intensity2);
   }
-
+  
   // Update timestamps
   elapsedTime = millis() - previousTime;
   previousTime = previousTime + elapsedTime;
@@ -154,7 +154,7 @@ void loop() {
 void readEvent(int count) {
   // All control messages start with command type
   command = Wire.read();
-
+  
   // Commands:
   // 0 - Get Type
   // 1 - Set Intensity | intensity1 intensity2 duration
@@ -204,7 +204,7 @@ void sendEvent() {
     Wire.write(boardType);
   } else if (command == 2) {
     // Convert temperatures to char array for easy writing
-    Wire.write((char*) temperatures, 8);
+    Wire.write((char*) temperatures, 2);
   }
 }
 
@@ -212,15 +212,15 @@ void calculateTemperatures() {
   // Read sensor values
   sensorReadings[0] = analogRead(t1Pin);
   sensorReadings[1] = analogRead(t2Pin);
-
+  
   for (int i = 0; i < 2; i++) {
-    // Calculate voltage over 10k resistor
-    // Supply voltage is 5V and ADC has values between 0-1023
-    VR = (VCC / 1023.00) * sensorReadings[i];
     // Calculate voltage over thermistor
-    VT = VCC - VR;
+    // Supply voltage is 5V and ADC has values between 0-1023
+    VT = (VCC / 1023.00) * sensorReadings[i];
+    // Calculate voltage over resistor
+    VR = VCC - VT;
     // Calculate resistance caused by temperature
-    RT = VT / (VR / R);
+    RT = VT / (VR / R[i]);
     // Calculate temperature in Kelvin based on the measurements
     ln = log(RT / RT0);
     TX = (1 / ((ln / B) + (1 / T0)));
